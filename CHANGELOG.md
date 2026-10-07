@@ -2,6 +2,26 @@
 
 本技能仓库的版本记录。每次更新递增版本号并创建 GitHub Release（tag = `vX.Y.Z`），Release 说明取对应版本段落。
 
+## v2.0.11
+
+**更新了什么（2026-10-07）**
+- **补齐问题记录 #17-24（09-30/10-01 云端实测沉淀，与 SKILL 正文同步）**：
+  - #17 商品编号必须输入「商品编号」框（x=714,y=134，宽185）+ 真 submit「查询」，回读验证唯一 ID
+  - #18 click_xy 用 0-1000 归一化坐标，按钮类交互优先 JS click()
+  - #19 名称框只认 `input.bar-label`，严禁误选 `.melo-doc-title`（会改文档标题）
+  - #20 名称框跳转用 bu 真实键盘（click → ctrl+a → type submit=True），JS 派发 Enter 无效
+  - #21 单元格编辑必须 #alloy-simple-text-editor + insertText + Enter 提交 + JS API 回读；禁止公式栏提交、禁止坐标双击定位
+  - #22 云端（Cloud Linux）与本地 Windows 环境差异：video_tmp 相对路径、登录态需重新引导、备份存 agent workspace
+  - #23 商品弹窗编号框坐标随视口变化（1280→x=714，1800→x=1354），不可硬编码，改为「截图→枚举 input→按 y 同排第二框填写→回读验证」
+  - #24 腾讯文档名称框 ref 每次导航后变化，每次回填前重新 snapshot 定位（排除文档标题框）
+- **新增默认业务规则 16（腾讯文档回填统一路径）**：名称框 `input.bar-label` + bu 真实键盘跳转 E{数据行+1} → Enter 进编辑态 → execCommand('insertText') 输入 → Enter 提交 → JS API 回读验证±1 行；禁止公式栏提交、禁止坐标双击定位
+- **新增运行记录 09-27/09-30 及 10-01~10-07**（docs/run-log/）：10-01 采寻 r427/r428 发布成功（登录态复用方式 A 首次验证）、10-02~10-07 每日无待发任务（方式 A 连续生效）
+
+**如何操作（升级）**
+- 将本仓库 `skills/douyin-shop-video-publish/` 整个目录覆盖到客户端 skills 根目录；
+- 已有 `config.json` 无需改动（本版未变更配置结构）；
+- 首次运行请先读 `SKILL.md` 与 `AGENT-GUIDE.md`，按「全表扫描 → 动态发现店铺 → 逐店处理」流程执行。
+
 ## v2.0.10
 
 **更新了什么（2026-09-29）**

@@ -2,7 +2,7 @@
 name: douyin-shop-video-publish
 description: 抖店（抖音小店）短视频自动发布 Agent 技能（可配置、可分享）。按任务表驱动，自动完成视频查找、微盘下载、上传、挂车/非挂车判断、商品匹配、标题描述生成、违禁词检查（含换一换与商品ID表话题兜底）、AI内容声明、话题添加（SOP下拉选择）、发布时间计算（平台时间优先）、发布、成功验证与任务表回填；发布成功后视频自动归档到 video_dir/archive/，归档目录按 rules.archive_keep_days 定期清理（默认保留30天）。遵守：页面真实状态优先、防重复发布、禁止猜测、按店铺并发同店串行、发完当日挂车额度后不再发非挂车、测试/违规视频跳过、每店处理完先总结记录、断点续跑。所有 URL、路径与业务规则通过 config.json 配置，部署后即可在不同账号/店铺体系下复用。适用于在豆包浏览器（browser-use-automation / computer_use_tool plane=bu）中运行的自动化发布任务。
 metadata:
-  version: 2.0.8
+  version: 2.0.11
   platform: windows
   requires:
     bins: ["git", "gh", "python"]
@@ -230,6 +230,14 @@ metadata:
 | 14 | 清除单元格内容时 execCommand('delete') 无效、空编辑框+Enter 被视为未修改（2026-09-29 实测） | 清除必须用 execCommand('insertText', false, '') 替换全选内容触发 input 事件后 Enter 提交 |
 | 15 | 窄视口（639px）下店铺名/切换入口在视口外，点击、滚动、CDP、桌面控制均不可用 | JS 设置 document.documentElement.style.zoom='0.5' 缩放页面使右侧内容进入视口，再按缩放后归一化坐标 click_xy 点击店铺名 → 切换组织/店铺 → 弹窗选店；导航后 zoom 丢失需重设 |
 | 16 | 回填误写：名称框 Excel 行号 = 数据行号 + 1（E422=数据行421），按数据行号跳转会写到上一行（2026-09-29 实测事故） | 跳转用「E{数据行+1}」；跳转后必须验证编辑框显示目标单元格当前值再修改；WebView 键盘阻塞时用 JS setter+Enter 事件跳转 |
+| 17 | 商品弹窗编号输入到「商品名称」框（x=409,y=134）而非「商品编号」框（x=714,y=134），查询无结果（2026-09-30） | 「商品编号」输入框精确定位 x=714,y=134（宽185）；查询按钮用 JS `button[type=submit]`「查询」click()；查询后回读验证列表只剩目标 ID |
+| 18 | bu.click_xy 把 JS 像素坐标当归一化坐标使用，点错按钮（2026-09-30） | click_xy 用 0-1000 归一化坐标（=像素/视口宽高×1000）；按钮类交互优先 JS click() 避免换算 |
+| 19 | 名称框选择器误选 `.melo-doc-title`（文档标题框），输入 E424+Enter 把文档标题改成 E424（2026-09-30 险些事故） | 名称框只认 `input.bar-label`；误改标题用 document.title 原值恢复（本次为「未发布视频登记」） |
+| 20 | 名称框跳转 JS 派发 Enter 无效（选中格不跳转） | 用 bu 真实键盘：click 名称框 ref → ctrl+a → `bu.type(ref,"E{行}", submit=True)` |
+| 21 | 顶部公式栏（.formula-input）输入时间+Enter 提交无效（残留不写入）；坐标双击偏移点到 D421（未提交，安全） | 单元格编辑必须：名称框跳转 → bu.press_key(Enter) 进入编辑态 → **#alloy-simple-text-editor** → execCommand('insertText') 输入 → bu.press_key(Enter) 提交 → JS API 回读验证；禁止公式栏提交、禁止坐标双击定位 |
+| 22 | 云端环境（Cloud Linux）与 Windows 本地差异：Windows 路径不可访问、登录态重置 | video_tmp 用技能目录相对路径；任务表/抖店/微盘登录重新引导；备份文件存 agent workspace；违禁词核对用页面内容+内置清单（云端 xlsx 缺失待补在线方案） |
+| 23 | 商品弹窗「商品编号」输入框坐标随浏览器视口变化（1280 视口 x=714 → 1800 视口 x=1354），硬编码坐标会输错框（2026-10-01） | 不硬编码：打开弹窗后先截图/枚举弹窗内 input（y≈134 一排：商品名称在前、商品编号在后，编号框 w=185 靠右），按位置第二输入框填写；填后查询并回读验证列表只剩目标 ID |
+| 24 | 腾讯文档名称框 ref 每次导航后变化且显示值非固定（可能是 A1/E429），按旧条件匹配不到 ref | 每次回填前重新 snapshot，取 `input "X" [type=text edit]` 中 value 非标题名的输入框（排除 .melo-doc-title）作为名称框 ref，再执行跳转 |
 
 ## 五、默认业务规则（可在 config.rules 覆盖）
 
@@ -248,6 +256,7 @@ metadata:
 13. **禁止用 Ctrl+A+Backspace/Delete 清除单元格内容**（焦点不在编辑框时会选中整个表格并清空全表）；清除单元格：F2 → 确认 document.activeElement 是编辑框（#alloy-simple-text-editor/.formula-input）→ JS 全选编辑框内容（Range.selectNodeContents+selection.addRange）→ **execCommand('insertText', false, '') 替换选区（触发 input 事件，实测有效；execCommand('delete') 无效）** → Enter 提交 → 回读验证；
 14. **每次单元格写入/清除后立即 JS API 回读验证目标格±1 行**；Enter 后编辑框仍打开且文本空 = 未提交 → Esc 取消后重新 F2，禁止在同一编辑器上连续叠加输入/方向键；定位优先名称框跳转（bar-label 输入+Enter）并验证显示值。
 15. **阻塞问题即时沉淀（强制）**：每次遇到阻塞问题（人工处理、页面异常、误写/误操作事故、无法自动判断、登录态丢失等），在问题**解决后第一时间**把「问题现象 → 根因 → 解决方式 → 防再犯措施」总结写入当日运行记录与「四、问题与解决记录」，**然后再继续未完成的任务**；不得跳过沉淀直接继续，防止同类问题下次重现；沉淀后再继续可复用已验证步骤，避免重蹈覆辙。
+16. **腾讯文档回填统一路径（2026-09-30 云端实测）**：① 名称框 = `input.bar-label`（左上角 @8,150），**严禁**输入到 `.melo-doc-title`（文档标题框，会改标题）；② 名称框跳转用 **bu 真实键盘**（click ref → ctrl+a → `bu.type(ref,"E{数据行+1}", submit=True)`），JS 派发 Enter 无效；③ 跳转后验证 nameBox 显示目标地址；④ `bu.press_key("Enter")` 进入编辑态 → 确认 `#alloy-simple-text-editor` 出现；⑤ JS `focus → selectNodeContents 全选 → execCommand('insertText', false, '时间')` 输入；⑥ `bu.press_key("Enter")` 提交；⑦ JS API 回读验证目标行 E 值±1 行。**禁止**在顶部公式栏（.formula-input）输入后直接提交（无效）；**禁止**坐标双击定位单元格（视图滚动会偏移到错误单元格）。
 
 ## 六、红线（禁止事项）
 
