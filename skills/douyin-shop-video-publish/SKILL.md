@@ -254,6 +254,7 @@ metadata:
 | 38 | 定时时间被平台重置：r455 输入 18:08:33 平台最终接受 16:19:17（最早可用+2h）；定时时间设置后切 tab 会重置，日历弹层会拦截发布（2026-10-12） | 定时时间设置后不切 tab、立即截图确认；发布前确认日历已关闭；回填 E 列 = 管理列表显示的平台时间，不是输入值 |
 | 39 | **重复发布事故（2026-10-12 r456 严重）**：r456 第 2/3 次点击发布均实际提交成功（管理列表出现两条 18:19:17 定时记录、挂车额度 2/5→0/5），但发布后立即读额度/列表显示延迟（仍 2/5、暂无数据）导致误判「未提交成功」，连续重试造成重复提交 | **发布成功判定以「已提交发布」弹层出现为准**；点击发布后额度/列表可能延迟刷新（数分钟），**不得以额度未变/列表暂无数据判定未提交**；点击发布后面板关闭→先查管理列表确认是否已提交，**禁止盲目重试发布**；发布按钮点击限定底部（y>800）排除顶部导航「发布」；若疑重复提交→立即停止并人工核实；重复记录无撤回按钮，需用户到抖店后台人工处理（发布后删除/联系客服） |
 | 40 | 后台浏览器标签页堆积导致页面卡顿、弹窗/切换入口无法弹出（2026-10-12 用户反馈） | **每处理完一个店铺，先把后台网页全部关闭再重新打开**（保留抖店运营页 + 任务表 2 个页面，其余全部关闭）；关闭后 bu.resync() 重新附加再继续下一店；页面异常/弹窗不出现时优先怀疑标签页过多导致卡顿，先清理再重试 |
+| 41 | GitHub 推送网络问题（2026-10-12 本地 Windows）：git push https 失败——github.com:443 的 git 端点被干扰（DNS 默认 IP 20.205.243.166 及 140.82.112.3/113.3/114.3/20.27.177.113 等备用 IP 全部 000/Connection reset，且可用 IP 波动变化）；api.github.com 正常、github.com:22 与 ssh.github.com:22/443 稳定连通；hosts 无管理员权限不可写；gh auth refresh 增加 scope 也走 github.com:443 被墙；本地 CONNECT 代理（DNS 重写到可用 IP）方案因 IP 波动不稳定 | **SSH 通道推送（已验证有效）**：① ssh-keygen -t ed25519 生成密钥；② 用户在 GitHub 网页 settings/ssh/new 添加公钥（Title 任意）；③ ssh -o StrictHostKeyChecking=accept-new -T git@github.com 验证（Hi git7129-hub = OK，exit 1 正常）；④ `git -c url.git@github.com:.insteadOf=https://github.com/ push origin HEAD`（一次性映射，**不永久改 remote**）；⑤ ls-remote 验证远端 HEAD=本地；可用 IP 探测：`curl --resolve github.com:443:<IP> https://github.com/<owner>/<repo>.git/info/refs?service=git-upload-pack` 返回 200 即可用 |
 
 ## 五、默认业务规则（可在 config.rules 覆盖）
 
