@@ -1,4 +1,4 @@
-# douyin-shop-video-publish · Agent Skill
+# dyfb-maak · Agent Skill（抖店短视频自动发布）
 
 抖店（抖音小店）短视频自动发布 Agent 技能（**可配置、可分享**）。
 
@@ -7,7 +7,7 @@
 1. 将本目录整个复制到支持 Agent Skills 的客户端 skills 根目录：
    ```
    skills/
-   └── douyin-shop-video-publish/
+   └── dyfb-maak/
        ├── SKILL.md            ← 技能本体（先读）
        ├── AGENT-GUIDE.md      ← ★ Agent 操作手册（给执行 Agent 的机器级协议）
        ├── CONFIG-GUIDE.md     ← ★ 手把手配置引导（新部署者从这里开始）

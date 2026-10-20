@@ -10,23 +10,23 @@
 1. 找到你所用客户端（支持 Agent Skills 的豆包 / 同类客户端）的 **skills 根目录**；
    - 常见位置：客户端数据目录下的 `.skills`（豆包）或 `~/.agents/skills`；
    - 不确定时，在客户端里问一句「我的 skills 根目录在哪」即可定位。
-2. 把本仓库 `skills/douyin-shop-video-publish/` **整个目录**复制进去：
+2. 把本仓库 `skills/dyfb-maak/` **整个目录**复制进去：
    ```
    skills/
-   └── douyin-shop-video-publish/
+   └── dyfb-maak/
        ├── SKILL.md
        ├── config.example.json
        ├── CONFIG-GUIDE.md      ← 本文件
        └── README.md
    ```
-3. 确认技能被识别：在客户端提问「列出 douyin-shop-video-publish 技能并读它的配置项」，能读到 SKILL.md 即安装成功。
+3. 确认技能被识别：在客户端提问「列出 dyfb-maak 技能并读它的配置项」，能读到 SKILL.md 即安装成功。
 
 ## 第二步：创建 config.json（1 分钟）
 
 打开命令行（Windows 用 PowerShell），进入技能目录，执行：
 
 ```powershell
-cd <你的技能目录路径>\douyin-shop-video-publish
+cd <你的技能目录路径>\dyfb-maak
 Copy-Item config.example.json config.json
 ```
 
